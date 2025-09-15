@@ -14,16 +14,16 @@ import streamlit as st
 from streamlit_option_menu import option_menu
 import time
 from datetime import datetime, timedelta, timezone,date
-from db_loader import Db_Upsert, get_last_watermark, update_last_watermark
 from urllib.parse import urlencode
 import json
 from streamlit_extras.stylable_container import stylable_container
 from login_page import login_connections
+from db_functions import get_data_db_parameters, get_data_db,full_load, incremental_load, data_loading, format_sync_time, load_shopify_data, trigger_manual_sync, get_table_stats, fetch_kpi_summary, get_sales_over_time
+from db_connection import get_jsonb_data, get_connection, run_query, get_user, get_user_stores, get_store_data, get_user_stores_by_store_id
+from db_loader import Db_Upsert, get_last_watermark, update_last_watermark
 from other_functions import time_ago, process_table,filter_days_difference
 from analytics_functions import creating_revenue, order_products_barchart, kpi_cards, build_customer_ltv
 from shopify_functions import fetch_shopify_data
-from db_functions import get_data_db_parameters, get_data_db,full_load, incremental_load, data_loading, format_sync_time, load_shopify_data, trigger_manual_sync, get_table_stats, fetch_kpi_summary, get_sales_over_time
-from db_connection import get_jsonb_data, get_connection, run_query, get_user, get_user_stores, get_store_data, get_user_stores_by_store_id
 from datefilter1 import get_date_range
 
 # ---------------------------
@@ -1281,6 +1281,7 @@ else:
             # fig_scatter = px.scatter(shipping, x="AvgTime", y="Orders",
                                      # size="Orders", title="Shipping Time vs Orders")
             # col2.plotly_chart(fig_scatter, use_container_width=True, key="shipping_scatter")
+
 
 
 
