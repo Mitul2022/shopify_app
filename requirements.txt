@@ -8,3 +8,4 @@ plotly==5.23.0
 streamlit-option-menu==0.4.0
 psycopg2-binary==2.9.10
 pytz==2025.2
+extra-streamlit-components==0.1.81
