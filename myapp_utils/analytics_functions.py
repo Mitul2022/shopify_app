@@ -1,0 +1,110 @@
+import os
+import time
+from datetime import datetime, timedelta, timezone
+from dateutil import parser as dtparser
+import requests
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import streamlit as st
+from streamlit_option_menu import option_menu
+import time
+from datetime import datetime, timedelta, timezone
+from db_loader import Db_Upsert, get_last_watermark, update_last_watermark
+from shopify_functions import fetch_shopify_data
+from db_functions import get_data_db, get_data_db, full_load, incremental_load, data_loading, format_sync_time, load_shopify_data, trigger_manual_sync
+from urllib.parse import urlencode
+from db_connection import get_jsonb_data
+import json
+
+
+# ---------------------------
+# Reusable UI helpers
+# ---------------------------
+def kpi_cards(kpis: dict):
+    st.markdown("""<style>.block-container {padding-top: 1rem;padding-bottom: 5rem; padding-left:2rem;padding-right:2rem;}
+    .kpi-card {
+        background: linear-gradient(135deg, #5CA4A9, #9BC1BC);
+        color: white;
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        transition: transform 0.2s ease;
+    }
+    .kpi-card:hover {transform: translateY(-5px);}
+    .kpi-value {font-size: 2rem; font-weight: bold; margin: 0;}
+    .kpi-label {font-size: 1rem; opacity: 0.9; margin: 0; margin-top: 6px;}
+    </style>""",unsafe_allow_html=True)
+    cols = st.columns(len(kpis))
+    palette = ["#E0F2F1","#E0F2F1", "#E0F2F1","#E0F2F1","#E0F2F1","#E0F2F1"]
+
+    # palette = ["#E8F5E9", "#E3F2FD", "#FFF3E0", "#FCE4EC", "#F3E5F5", "#FFFDE7"]
+    # palette = ["#F0F8FF","#E6F7FF","#FFF0F5","#FAFAD2","#EEF7EE","#FFF5E6"]
+    for i, (label, value) in enumerate(kpis.items()):
+        with cols[i]:
+            st.markdown(
+                f"""
+                <div style="background-color:{palette[i%len(palette)]}; padding:18px; 
+                    border-radius:14px; text-align:center;
+                    box-shadow:0 6px 15px rgba(0,0,0,0.09);">
+                    <h3 style="margin:0";">{value}</h3>
+                    <p style="margin:0;;color:#2E7D32; font-weight:500">{label}</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+            
+def build_customer_ltv(orders_df: pd.DataFrame) -> pd.DataFrame:
+    """Aggregate orders_df to compute Customer LTV and order count."""
+    if orders_df.empty:
+        return pd.DataFrame(columns=["customer_id", "customer_name", "customer_email", "orders", "total_spent"])
+
+    ltv = (
+        orders_df
+        .dropna(subset=["customer_id"])   # skip guest checkouts
+        .groupby(["customer_id", "customer_name", "customer_email", "currency"], as_index=False)
+        .agg(
+            orders=("order_id", "count"),
+            total_spent=("total", "sum")
+        )
+        .sort_values("total_spent", ascending=False)
+    )
+    return ltv
+
+def creating_revenue():
+    start_date=st.session_state.start_date
+    end_date=st.session_state.end_date
+    str_id_ana=st.session_state.str_id_ana
+    prod_ids = get_jsonb_data("line_items", "product_id", "bigint", "orders",str_id_ana,"processed_at",start_date,end_date)
+    quant = get_jsonb_data("line_items", "quantity", "int", "orders",str_id_ana,"processed_at",start_date,end_date)
+    prices = get_jsonb_data("line_items", "price", "float", "orders",str_id_ana,"processed_at",start_date,end_date)
+    
+    df_line_items = pd.DataFrame({
+    "product_id": prod_ids,
+    "quantity": quant,
+    "price": prices
+    })
+    
+    df_line_items["revenue"] = df_line_items["quantity"] * df_line_items["price"]
+    
+    return df_line_items
+
+def order_products_barchart(df_products):
+    df_line_items  =  creating_revenue()
+    
+    agg_data=df_line_items.groupby("product_id",as_index=False).agg(
+        revenue=("revenue","sum"),
+        quantity=("quantity","sum")
+    )
+    print(agg_data)
+    
+    charts=agg_data.merge(df_products[["id","title"]],left_on="product_id",right_on="id")
+    print(charts)
+    charts=charts.rename(columns={"title":"products"})
+    
+    charts=charts.sort_values("revenue",ascending=False).head(10)
+    return charts
+    
+# def products_insights():
+    # df_line_items=creating_revenue()
