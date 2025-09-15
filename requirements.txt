@@ -7,3 +7,11 @@ uvicorn==0.35.0
 plotly==5.23.0
 streamlit-option-menu==0.4.0
 psycopg2==2.9.10
+login_page
+other_functions
+analytics_functions
+shopify_functions
+db_functions
+db_connection
+datefilter1
+
