@@ -894,12 +894,15 @@ else:
                 with c1:
                     st.title("Analytics & Insights")
                 with c2:
+                    # filter_options = [
+                    # "Today", "Yesterday", "Last 7 days", "Last 30 days",
+                    # "Last 60 days", "Last 90 days", "Last 365 days",
+                    # "Last week", "Last month", "Last quarter",
+                    # "Week to date", "Last year", "Month to date",
+                    # "Quarter to date", "Year to date", "Custom Dates"
+                    # ] 
                     filter_options = [
-                    "Today", "Yesterday", "Last 7 days", "Last 30 days",
-                    "Last 60 days", "Last 90 days", "Last 365 days",
-                    "Last week", "Last month", "Last quarter",
-                    "Week to date", "Last year", "Month to date",
-                    "Quarter to date", "Year to date", "Custom Dates"
+                    "Today", "Yesterday", "Last 7 days", "Last 30 days"
                     ] 
                     
                     choice = st.selectbox("📅 Select Date Range", filter_options, index=2) 
@@ -1281,6 +1284,7 @@ else:
             # fig_scatter = px.scatter(shipping, x="AvgTime", y="Orders",
                                      # size="Orders", title="Shipping Time vs Orders")
             # col2.plotly_chart(fig_scatter, use_container_width=True, key="shipping_scatter")
+
 
 
 
