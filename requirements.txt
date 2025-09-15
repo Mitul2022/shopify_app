@@ -4,3 +4,4 @@ cryptography==45.0.6
 python-dateutil==2.9.0.post0
 urllib3==2.5.0
 uvicorn==0.35.0
+plotly==5.23.0
